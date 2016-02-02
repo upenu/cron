@@ -4,9 +4,12 @@ import psycopg2
 import datetime
 from dateutil.parser import parse
 import facebook
+import os
 
 def get_fb():
-    f = open("../facebook_data", 'r')
+    direc = os.path.dirname(__file__)
+    fb_data = os.path.join(direc, '../facebook_data')
+    f = open(fb_data, 'r')
     app_info = [x.strip() for x in f.read().split(" ")]
     access_token = facebook.get_app_access_token(app_info[0], app_info[1])
     graph = facebook.GraphAPI(access_token)
