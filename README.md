@@ -4,11 +4,13 @@ A collection of scripts which run periodically on the UPE web server.
 
 ## Configuration
 
-When and how these scripts run can be configured with `crontab -e`, running as root.
+When and how these scripts run can be configured with `crontab -e`.
 
-## add_events_psql
+## add_events.py
 
-Uses the Python Facebook SDK (Facebook Graph API) to access events associated with the UPE Berkeley Facebook page. It then takes whatever information it needs and adds it to our PostgreSQL Database.
+Uses the Python Facebook SDK (Facebook Graph API) to access events associated with the UPE Berkeley Facebook page. It then takes whatever information it needs and adds it to our MySQL Database.
+The cron script has several dependencies that can be installed with pip and virtualenv. A virtualenv with modules listed in requirements.txt from website repository is required.
+The script also depends on facebook-sdk 2.0.0 which is not yet on PyPI. To install, run `pip install -e git+https://github.com/mobolic/facebook-sdk.git#egg=facebook-sdk`.
 
 ## backup_db.sh
 
