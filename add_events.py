@@ -1,18 +1,17 @@
-#!/usr/bin/python
+# Make sure to run this inside virtualenv
 
-import psycopg2
 import datetime
-from dateutil.parser import parse
+from   dateutil.parser import parse
 import facebook
+import MySQLdb
 import os
 
 def get_fb():
     direc = os.path.dirname(__file__)
     fb_data = os.path.join(direc, '../facebook_data')
-    f = open(fb_data, 'r')
-    app_info = [x.strip() for x in f.read().split(" ")]
-    access_token = facebook.get_app_access_token(app_info[0], app_info[1])
-    graph = facebook.GraphAPI(access_token)
+    with open(fb_data, 'r') as f:
+        token = f.read().strip()
+    graph = facebook.GraphAPI(access_token=token, version="2.6")
 
     result = graph.get_object(id="/ucbupe/events", fields="name,start_time,description,place,cover,id")
     return result['data']
@@ -28,18 +27,19 @@ def get_db(conn):
 def put_db(conn, entry, exists):
     cur = conn.cursor()
     if not exists:
-        cur.execute("""INSERT INTO upe_calendar_event (name, start_time, description, location, banner, facebookid) 
+        cur.execute(u"""INSERT INTO upe_calendar_event (name, start_time, description, location, banner, facebookid)
                     VALUES (%(name)s, %(start_time)s, %(description)s, %(location)s, %(banner)s, %(facebookid)s);""",
                     entry)
     else:
-        cur.execute("""UPDATE upe_calendar_event 
+        cur.execute(u"""UPDATE upe_calendar_event
                     SET name=%(name)s,start_time=%(start_time)s,description=%(description)s,location=%(location)s,banner=%(banner)s
-                    WHERE facebookid = %(facebookid)s;""", 
+                    WHERE facebookid = %(facebookid)s;""",
                     entry)
 
     cur.close()
-    
-conn = psycopg2.connect("dbname=upe_db host=localhost port=5432 user=admin password=littlewhale")
+
+conn = MySQLdb.connect(host="localhost", user="admin", passwd="littlewhale", db="upe_db", port=3306)
+conn.set_character_set('utf8')
 
 db = get_db(conn)
 fb = get_fb()
@@ -47,11 +47,11 @@ fb = get_fb()
 for fbe in fb:
     start = parse(fbe["start_time"])
     fbe_t = {
-             "name" : fbe["name"], 
-             "start_time" : start, 
-             "description" : fbe["description"] if "description" in fbe else "", 
-             "location" : fbe["place"]["name"], 
-             "banner" : fbe["cover"]["source"] if "cover" in fbe else "", 
+             "name" : fbe["name"],
+             "start_time" : start,
+             "description" : fbe["description"] if "description" in fbe else "",
+             "location" : fbe["place"]["name"],
+             "banner" : fbe["cover"]["source"] if "cover" in fbe else "",
              "facebookid" : fbe["id"]
             }
     for dbe in db:
@@ -60,7 +60,7 @@ for fbe in fb:
             put_db(conn, fbe_t, True)
             break
     else:
-        # No match found        
+        # No match found
         put_db(conn, fbe_t, False)
         pass
 
