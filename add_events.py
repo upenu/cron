@@ -66,4 +66,3 @@ for fbe in fb:
 
 conn.commit()
 conn.close()
-
